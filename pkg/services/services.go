@@ -10,7 +10,6 @@ type services struct {
 	logger *logrus.Logger
 }
 
-// NewServices will create new an services object to start raggers services.
 func NewServices(logger *logrus.Logger) *services {
 	return &services{
 		logger: logger,
