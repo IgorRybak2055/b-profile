@@ -43,47 +43,91 @@ func generateMatchingID() (string, error) {
 
 func (p profileService) OrderProfile(ctx context.Context, iccids []string) ([][]string, error) {
 	var (
-		csvHeader = []string{"iccid","matchingId","error"}
-		profiles = make([][]string, 0, len(iccids))
-		err      error
+		csvHeader = []string{"iccid", "matchingId", "error"}
+		profiles  = make([][]string, 0, len(iccids))
+		ch        = make(chan []string, len(iccids))
 	)
 
 	profiles = append(profiles, csvHeader)
 
 	for _, iccid := range iccids {
-		var profile = models.Profile{ICCID: iccid}
-
-		if profile.MatchingID, err = generateMatchingID(); err != nil {
-			p.log.Warn("failed to generate matchingId for %s iccid: %s", iccid, err)
-
-			profile.MatchingID = ""
-
-			data := profile.CVSRespond()
-			data = append(data, ErrGenerateMatchingID.Error())
-
-			profiles = append(profiles, data)
-
-			continue
-		}
-
-		if err = p.profileRepo.OrderProfile(ctx, profile); err != nil {
-			p.log.Warn("failed to save matchingId %s iccid: %s", iccid, err)
-
-			profile.MatchingID = ""
-
-			data := profile.CVSRespond()
-			data = append(data, err.Error())
-
-			profiles = append(profiles, data)
-
-			continue
-		}
-
-		data := profile.CVSRespond()
-		data = append(data, "")
-
-		profiles = append(profiles, data)
+		go p.orderWorker(ctx, iccid, ch)
 	}
 
+	for len(profiles) < len(iccids) {
+		profiles = append(profiles, <-ch)
+	}
+
+	// for _, iccid := range iccids {
+	// 	var profile = models.Profile{ICCID: iccid}
+	//
+	// 	if profile.MatchingID, err = generateMatchingID(); err != nil {
+	// 		p.log.Warnf("failed to generate matchingId for %s iccid: %s", iccid, err)
+	//
+	// 		profile.MatchingID = ""
+	//
+	// 		data := profile.CVSRespond()
+	// 		data = append(data, ErrGenerateMatchingID.Error())
+	// 		profiles = append(profiles, data)
+	//
+	// 		continue
+	// 	}
+	//
+	// 	if err = p.profileRepo.OrderProfile(ctx, profile); err != nil {
+	// 		p.log.Warnf("failed to save matchingId %s iccid: %s", iccid, err)
+	//
+	// 		profile.MatchingID = ""
+	//
+	// 		data := profile.CVSRespond()
+	// 		data = append(data, err.Error())
+	//
+	// 		profiles = append(profiles, data)
+	//
+	// 		continue
+	// 	}
+	//
+	// 	data := profile.CVSRespond()
+	// 	data = append(data, "")
+	//
+	// 	profiles = append(profiles, data)
+	// }
+
 	return profiles, nil
+}
+
+func (p profileService) orderWorker(ctx context.Context, iccid string, ch chan []string) {
+	var (
+		profile = models.Profile{ICCID: iccid}
+		err     error
+	)
+
+	if profile.MatchingID, err = generateMatchingID(); err != nil {
+		p.log.Warnf("failed to generate matchingId for %s iccid: %s", iccid, err)
+
+		profile.MatchingID = ""
+		data := profile.CVSRespond()
+		data = append(data, ErrGenerateMatchingID.Error())
+
+		ch <- data
+
+		return
+	}
+
+	if err = p.profileRepo.OrderProfile(ctx, profile); err != nil {
+		p.log.Warnf("failed to save matchingId %s iccid: %s", iccid, err)
+
+		profile.MatchingID = ""
+
+		data := profile.CVSRespond()
+		data = append(data, err.Error())
+
+		ch <- data
+
+		return
+	}
+
+	data := profile.CVSRespond()
+	data = append(data, "")
+
+	ch <- data
 }

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ErrDBInteracting = errors.New("error interacting with the database")
+	ErrDBInteracting     = errors.New("error interacting with the database")
 	ErrNotAvailableICCID = errors.New("this iccid not available")
 )
 
@@ -53,12 +53,8 @@ func Connect(dsn string, logger *logrus.Logger) (*sqlx.DB, error) {
 
 // MakeMigrations provides an opportunity to work with migrations
 func (c Config) MakeMigrations(logger *logrus.Logger) error {
-	// "postgres://postgres:postgres@localhost:5432/example?sslmode=disable"
-
 	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
 		c.User, c.Pass, c.Host, c.Name, c.SSLMode)
-
-	logger.Info("DSN -- ", dsn)
 
 	m, err := migrate.New("file://migrations", dsn)
 	if err != nil {
@@ -73,4 +69,3 @@ func (c Config) MakeMigrations(logger *logrus.Logger) error {
 
 	return nil
 }
-

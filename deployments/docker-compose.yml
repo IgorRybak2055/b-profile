@@ -9,14 +9,14 @@ services:
     expose:
       - '5432'
 
-  bamboo:
-    build:
-      context: ..
-      dockerfile: dockerfile
-    restart: on-failure
-    env_file:
-      - ../config/bamboo.env
-    depends_on:
-      - postgres
-    ports:
-      - 8198:8198
+#  bamboo:
+#    build:
+#      context: ..
+#      dockerfile: dockerfile
+#    restart: on-failure
+#    env_file:
+#      - ../config/bamboo.env
+#    depends_on:
+#      - postgres
+#    ports:
+#      - 8198:8198

@@ -29,11 +29,18 @@ func main() {
 
 	app := bamboo.New(cfg.HTTP)
 
-	// TODO: we don't need somethi
 	srvs := services.NewServices(log)
 
-	srvs.Run(2, 10, func() error {
-		return cfg.DB.MakeMigrations(log)
+	srvs.Run(3, 10, func() error {
+		if err := cfg.DB.MakeMigrations(log); err != nil {
+			log.Infof("failed to make migrations: %s", err)
+
+			return err
+		}
+
+		log.Info("success migration")
+
+		return nil
 	})
 
 	srvs.Run(10, 10, func() error {

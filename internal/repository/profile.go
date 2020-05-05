@@ -13,7 +13,6 @@ type profile struct {
 	dbc *sqlx.DB
 }
 
-// NewProfileRepository will create an object that represent the Profile interface
 func NewAccountRepository(dbc *sqlx.DB) Profile {
 	return &profile{dbc}
 }
