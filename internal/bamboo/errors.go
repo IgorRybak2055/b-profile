@@ -15,6 +15,7 @@ func newError(code int, err error) Error {
 	}
 }
 
+// Error implements error interface.
 func (e Error) Error() string {
 	return e.Err.Error()
 }

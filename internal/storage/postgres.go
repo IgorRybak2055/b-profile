@@ -33,6 +33,12 @@ func (c Config) Postgres() string {
 		c.Host, c.Name, c.User, c.Pass, c.SSLMode)
 }
 
+// PostgresMigration returns postgres dsn for golang-migrate.
+func (c Config) PostgresMigration() string {
+	return fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
+		c.User, c.Pass, c.Host, c.Name, c.SSLMode)
+}
+
 // Connect return database connection and error if postgres connection don't open
 func Connect(dsn string, logger *logrus.Logger) (*sqlx.DB, error) {
 	var err error
@@ -52,10 +58,7 @@ func Connect(dsn string, logger *logrus.Logger) (*sqlx.DB, error) {
 }
 
 // MakeMigrations provides an opportunity to work with migrations
-func (c Config) MakeMigrations(logger *logrus.Logger) error {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
-		c.User, c.Pass, c.Host, c.Name, c.SSLMode)
-
+func (c Config) MakeMigrations(dsn string, logger *logrus.Logger) error {
 	m, err := migrate.New("file://migrations", dsn)
 	if err != nil {
 		logger.Fatal("failed to creating new migrations:", err)

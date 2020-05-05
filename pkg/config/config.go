@@ -9,11 +9,13 @@ import (
 	"github.com/IgorRybak2055/bamboo/internal/storage"
 )
 
+// Config stores configs for bamboo.
 type Config struct {
 	HTTP *bamboo.HTTPConfig
 	DB   *storage.Config
 }
 
+// NewConfig returns Config with values from environment variables.
 func NewConfig(ctx context.Context) (*Config, error) {
 	var cfg = &Config{
 		HTTP: &bamboo.HTTPConfig{},

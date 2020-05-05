@@ -20,8 +20,8 @@ type profileService struct {
 	log         *logrus.Logger
 }
 
-// NewAccountService will create new accountService object representation of Account interface
-func NewAccountService(pr repository.Profile, logger *logrus.Logger) Profile {
+// NewProfileService will create new profileService object representation of Profile interface
+func NewProfileService(pr repository.Profile, logger *logrus.Logger) Profile {
 	return &profileService{
 		profileRepo: pr,
 		log:         logger,
@@ -41,6 +41,7 @@ func generateMatchingID() (string, error) {
 	return matchingID, nil
 }
 
+// OrderProfile generates and stores matchingID's for a set of incoming iccids.
 func (p profileService) OrderProfile(ctx context.Context, iccids []string) ([][]string, error) {
 	var (
 		csvHeader = []string{"iccid", "matchingId", "error"}
@@ -54,7 +55,7 @@ func (p profileService) OrderProfile(ctx context.Context, iccids []string) ([][]
 		go p.orderWorker(ctx, iccid, ch)
 	}
 
-	for len(profiles) < len(iccids) {
+	for len(profiles) <= len(iccids) {
 		profiles = append(profiles, <-ch)
 	}
 

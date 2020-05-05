@@ -13,11 +13,12 @@ type profile struct {
 	dbc *sqlx.DB
 }
 
+// NewAccountRepository will create an object to access profile repository that represent the Profile interface
 func NewAccountRepository(dbc *sqlx.DB) Profile {
 	return &profile{dbc}
 }
 
-// CreateAccount use account data for registration new account in database.
+// OrderProfile added matchingID to repository and change status to 'Confirmed'.
 func (p profile) OrderProfile(ctx context.Context, profile models.Profile) error {
 	var query = `
 UPDATE

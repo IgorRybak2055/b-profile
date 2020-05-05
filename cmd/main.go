@@ -32,7 +32,7 @@ func main() {
 	srvs := services.NewServices(log)
 
 	srvs.Run(3, 10, func() error {
-		if err := cfg.DB.MakeMigrations(log); err != nil {
+		if err := cfg.DB.MakeMigrations(cfg.DB.PostgresMigration(), log); err != nil {
 			log.Infof("failed to make migrations: %s", err)
 
 			return err
