@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bamboo
+  labels:
+    app: bamboo
+spec:
+  containers:
+  - image: rinormaloku/sentiment-analysis-frontend
+    name: bamboo
+    ports:
+    - containerPort: 8198
+
+------------------
+
+apiVersion: v1
+kind: Service              # 1
+metadata:
+  name: bamboo-lb
+spec:
+  type: LoadBalancer       # 2
+  ports:
+  - port: 8198               # 3
+    protocol: TCP          # 4
+    targetPort: 8198         # 5
+  selector:                # 6
+    app: bamboo       # 7

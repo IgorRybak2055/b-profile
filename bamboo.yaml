@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  POSTGRES_USER: "bamboo"
+  POSTGRES_PASSWORD: "bamboo"
+  POSTGRES_DB: "bamboo"
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv-volume
+  labels:
+    type: local
+    app: db-postgres
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
+  persistentVolumeReclaimPolicy: Retain
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pv-claim
+  labels:
+    app: db-postgres
+spec:
+  storageClassName: manual
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-postgres
+  labels:
+    app: db-postgres
+spec:
+  selector:
+    matchLabels:
+      app: db-postgres
+      tier: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: db-postgres
+        tier: postgres
+    spec:
+      containers:
+      - image: postgres:latest
+        name: postgres
+        imagePullPolicy: "IfNotPresent"
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-persistent-storage
+      volumes:
+      - name: postgres-persistent-storage
+        persistentVolumeClaim:
+          claimName: postgres-pv-claim
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-postgres
+  labels:
+    app: db-postgres
+spec:
+  type: NodePort
+  ports:
+  - port: 5432
+  selector:
+    app: db-postgres
+    tier: postgres
+
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+stringData:
+  HTTP_ADDR: ":8198"
+  LOG_LEVEL: "debug"
+
+  DATABASE_HOST: "db-postgres"
+  DATABASE_NAME: "bamboo"
+  DATABASE_USER: "bamboo"
+  DATABASE_PASSWORD: "bamboo"
+  DATABASE_SSLMODE: "disable"
+
+  MIGRATIONS_FILES: "/migrations"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-bamboo
+  labels:
+    app: app-bamboo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-bamboo
+  template:
+    metadata:
+      labels:
+        app: app-bamboo
+    spec:
+      containers:
+      - name: app-bamboo
+        image: igorrybak/bamboo-test:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8198
+        envFrom:
+        - secretRef:
+            name: app-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-bamboo
+  labels:
+    app: app-bamboo
+spec:
+  type: NodePort
+  selector:
+    app: app-bamboo
+  ports:
+  - name: http
+    port: 8198
+    targetPort: 8198
