@@ -58,40 +58,6 @@ func (p profileService) OrderProfile(ctx context.Context, iccids []string) ([][]
 		profiles = append(profiles, <-ch)
 	}
 
-	// for _, iccid := range iccids {
-	// 	var profile = models.Profile{ICCID: iccid}
-	//
-	// 	if profile.MatchingID, err = generateMatchingID(); err != nil {
-	// 		p.log.Warnf("failed to generate matchingId for %s iccid: %s", iccid, err)
-	//
-	// 		profile.MatchingID = ""
-	//
-	// 		data := profile.CVSRespond()
-	// 		data = append(data, ErrGenerateMatchingID.Error())
-	// 		profiles = append(profiles, data)
-	//
-	// 		continue
-	// 	}
-	//
-	// 	if err = p.profileRepo.OrderProfile(ctx, profile); err != nil {
-	// 		p.log.Warnf("failed to save matchingId %s iccid: %s", iccid, err)
-	//
-	// 		profile.MatchingID = ""
-	//
-	// 		data := profile.CVSRespond()
-	// 		data = append(data, err.Error())
-	//
-	// 		profiles = append(profiles, data)
-	//
-	// 		continue
-	// 	}
-	//
-	// 	data := profile.CVSRespond()
-	// 	data = append(data, "")
-	//
-	// 	profiles = append(profiles, data)
-	// }
-
 	return profiles, nil
 }
 
